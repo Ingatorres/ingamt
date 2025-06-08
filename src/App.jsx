@@ -168,23 +168,41 @@ function App() {
 
   // Configures the print function
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current, // The content to be printed is the component pointed to by the reference
+    // Aggressive validation: throw an error if ref is null
+    content: () => {
+      if (!componentRef.current) {
+        console.error("react-to-print: componentRef.current is null when 'content' function is called.");
+        // Instead of alert, you might use a custom modal or just throw,
+        // as the onPrintError will catch it.
+        throw new Error('El contenido del CV no está listo para imprimir. Inténtelo de nuevo.');
+      }
+      return componentRef.current;
+    },
     documentTitle: 'CV_Angel_Mateo_Torres_Barco', // PDF file name
     pageStyle: pageStyle, // Applies the CSS styles defined for the PDF
-    // NEW LOGIC: onBeforeGetContent to ensure the ref is ready
     onBeforeGetContent: () => {
+      console.log("react-to-print: onBeforeGetContent called.");
       return new Promise((resolve) => {
         // A small delay to ensure the DOM is fully ready in the print iframe
         setTimeout(() => {
           if (componentRef.current) {
-            console.log("react-to-print: Ref to CV component found.", componentRef.current); // Log to confirm ref
+            console.log("react-to-print: Ref to CV component found inside onBeforeGetContent.", componentRef.current); // Log to confirm ref
             resolve();
           } else {
-            console.warn("react-to-print: Could not find reference to CV content for printing after delay.");
-            resolve(Promise.reject("No content ref")); // Reject the promise to stop printing if ref is still null
+            console.warn("react-to-print: Could not find reference to CV content for printing after delay inside onBeforeGetContent.");
+            // If the ref is still null here, we can reject, and onPrintError will be called.
+            resolve(Promise.reject(new Error("No content ref available after delay.")));
           }
         }, 500); // Waits 500 milliseconds (0.5 seconds)
       });
+    },
+    onAfterPrint: () => {
+      console.log("react-to-print: Printing finished.");
+    },
+    onPrintError: (error) => {
+      console.error("react-to-print: Error during printing:", error);
+      // You can display a user-friendly message here, e.g., using a custom modal
+      // alert("Error al generar el PDF: " + error.message); // DO NOT USE alert()
     },
   });
 
@@ -203,12 +221,14 @@ function App() {
             style={{ backgroundColor: 'var(--bs-info)', borderColor: 'var(--bs-info)', color: 'var(--bs-primary)' }}
             onClick={() => {
               console.log("Button 'Descargar CV PDF' clicked."); // Log on click
-              console.log("Current state of componentRef.current BEFORE handlePrint:", componentRef.current); // Log ref state
+              console.log("Current state of componentRef.current BEFORE handlePrint execution:", componentRef.current); // Log ref state
+              
+              // Direct validation before calling handlePrint
               if (componentRef.current) {
                 handlePrint();
               } else {
-                console.error("Cannot print: componentRef.current is null.");
-                // Here you could display a visible message to the user if desired
+                console.error("Manual check: componentRef.current is null. Cannot trigger print.");
+                // alert("El CV no está completamente cargado. Inténtelo de nuevo."); // DO NOT USE alert()
               }
             }}
           >

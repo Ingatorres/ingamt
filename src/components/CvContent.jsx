@@ -7,7 +7,7 @@ import Formacion from './Formacion';
 import Referencias from './Referencias';
 import Actividades from './Actividades';
 import cvData from '../data'; // Imports data for the footer
-import ErrorBoundary from './ErrorBoundary'; // Importa el componente ErrorBoundary
+import ErrorBoundary from './ErrorBoundary'; // Import the ErrorBoundary component
 
 // CvContent is the component that groups all sections of the CV.
 // Uses forwardRef so that react-to-print can access its DOM.
@@ -16,24 +16,27 @@ const CvContent = forwardRef((props, ref) => {
   // It is useful for debugging if the 'ref' is being assigned.
   useEffect(() => {
     if (ref && typeof ref === 'object' && ref.current) {
-      console.log('CvContent: Component mounted and ref.current available.', ref.current);
+      console.log('CvContent: ref.current disponible', ref.current); // Más conciso
     } else {
-      console.log('CvContent: Component mounted, but ref.current is not available or not a DOM object.');
+      console.warn('CvContent: ref.current NO disponible'); // Más conciso
     }
-  }, [ref]); // Re-runs if the ref's reference changes
+  }); // Sin array de dependencias para que se ejecute en cada render para propósitos de depuración agresiva.
 
   return (
     // The 'ref' is attached to this main container div.
+    // Ensure this div is always rendered and valid.
     <div ref={ref} className="bg-secondary">
       {/* Main container for all CV content */}
       <main className="container pt-5">
-        {/* Cada sección se envuelve en un ErrorBoundary para aislar posibles fallos de renderizado */}
+        {/* Each section is wrapped in an ErrorBoundary to isolate potential rendering failures. */}
+        {/* If any child component fails to render, ErrorBoundary will catch it, */}
+        {/* display a fallback UI, and prevent the parent ref from becoming null. */}
         <ErrorBoundary><Perfil /></ErrorBoundary>
         <ErrorBoundary><Experiencia /></ErrorBoundary>
         <ErrorBoundary><Habilidades /></ErrorBoundary>
         <ErrorBoundary><Formacion /></ErrorBoundary>
         <ErrorBoundary><Referencias /></ErrorBoundary>
-        <ErrorBoundary><Actividades /></ErrorBoundary>
+        <ErrorBoundary><Actividades /></Actividades>
       </main>
 
       {/* CV Footer, also included in the PDF */}
