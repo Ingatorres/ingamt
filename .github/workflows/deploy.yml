@@ -1,0 +1,33 @@
+# .github/workflows/deploy.yml
+name: Deploy to GitHub Pages # Nombre de la rutina de trabajo
+
+on:
+  push:
+    branches:
+      - main # Se ejecuta cada vez que hay un 'push' a la rama 'main'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # Ejecuta en un entorno Ubuntu en los servidores de GitHub
+
+    steps:
+    - name: Checkout repository # Paso 1: Descarga el código de tu repositorio
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js # Paso 2: Configura Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20' # Usa una versión compatible de Node.js
+
+    - name: Install dependencies # Paso 3: Instala todas las dependencias del proyecto (npm install)
+      run: npm install
+
+    - name: Build application # Paso 4: Compila la aplicación React para producción (npm run build)
+      run: npm run build
+
+    - name: Deploy to GitHub Pages # Paso 5: Despliega los archivos compilados en GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3 # Acción pre-construida para desplegar en GH Pages
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }} # Token de GitHub para autenticación (automático)
+        publish_dir: ./dist # La carpeta que se debe publicar (la salida de 'npm run build')
+        # La propiedad 'base' en vite.config.js se encarga de las rutas correctas para GitHub Pages

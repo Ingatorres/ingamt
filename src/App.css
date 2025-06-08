@@ -1,0 +1,39 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Poppins:wght@400;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+    color: #333;
+    background-color: #f8f9fa;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+    color: #004085; /* Azul oscuro para titulares */
+}
+
+/* Estilos para impresión */
+@media print {
+    body {
+        margin: 0;
+        color: #000;
+        background-color: #fff;
+    }
+
+    /* Ocultar elementos no deseados en la impresión, como botones o barras de navegación */
+    .no-print {
+        display: none !important;
+    }
+
+    /* Asegurar que el contenido del footer se muestre correctamente en el PDF */
+    .pdf-footer-content {
+        position: running(footer);
+    }
+
+    /* Puedes ajustar tamaños de fuente o márgenes para la impresión si es necesario */
+    .container, .row, .col {
+        width: 100% !important;
+        max-width: 100% !important;
+        flex: none !important;
+    }
+}
