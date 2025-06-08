@@ -10,9 +10,10 @@ const Perfil = () => {
     <section id="perfil" className="my-5 p-4 bg-light shadow rounded-lg">
       <div className="row align-items-center">
         <div className="col-md-4 text-center">
-          {/* La ruta de la imagen usa una barra inicial para indicar que está en la carpeta 'public' */}
+          {/* CORRECCIÓN: Usamos import.meta.env.BASE_URL para asegurar la ruta relativa correcta en GitHub Pages */}
+          {/* Esto convertirá la ruta a /ingamt/CVPh.jpg cuando esté desplegado */}
           <img
-            src="/CVPh.jpg"
+            src={`${import.meta.env.BASE_URL}CVPh.jpg`}
             alt="Foto de Perfil"
             className="img-fluid rounded-circle shadow-sm"
             style={{ width: '150px', height: '150px', objectFit: 'cover' }}

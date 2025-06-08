@@ -171,6 +171,14 @@ function App() {
     content: () => componentRef.current, // El contenido a imprimir es el componente al que apunta la referencia
     documentTitle: 'CV_Angel_Mateo_Torres_Barco', // Nombre del archivo PDF
     pageStyle: pageStyle, // Aplica los estilos CSS definidos para el PDF
+    // Asegura que el ref esté presente antes de intentar imprimir
+    onBeforeGetContent: () => {
+      if (!componentRef.current) {
+        console.warn("No se encontró la referencia al contenido del CV para imprimir.");
+        return Promise.reject("No content ref"); // Evita que se intente imprimir sin contenido
+      }
+      return Promise.resolve();
+    }
   });
 
   return (
@@ -192,10 +200,10 @@ function App() {
           </Button>
 
           {/* Botón de toggle para el navbar en móviles */}
-          <Navbar.Toggle aria-controls="navbarNav" className="order-2" />
+          <Navbar.Toggle aria-controls="navbarNav" />
 
           {/* Enlaces de Navegación */}
-          <Navbar.Collapse id="navbarNav" className="order-3 order-lg-1">
+          <Navbar.Collapse id="navbarNav">
             <Nav className="ms-auto mb-2 mb-lg-0">
               <Nav.Link href="#perfil" className="text-white hover-accent px-lg-3 py-2">Perfil</Nav.Link>
               <Nav.Link href="#trayectoria" className="text-white hover-accent px-lg-3 py-2">Trayectoria</Nav.Link>
