@@ -163,62 +163,62 @@ const pageStyle = `
 `;
 
 function App() {
-  // Crea una referencia al componente CvContent para que react-to-print pueda acceder a él
+  // Creates a reference to the CvContent component so react-to-print can access it
   const componentRef = useRef();
 
-  // Configura la función de impresión
+  // Configures the print function
   const handlePrint = useReactToPrint({
-    content: () => componentRef.current, // El contenido a imprimir es el componente al que apunta la referencia
-    documentTitle: 'CV_Angel_Mateo_Torres_Barco', // Nombre del archivo PDF
-    pageStyle: pageStyle, // Aplica los estilos CSS definidos para el PDF
-    // NUEVA LÓGICA: onBeforeGetContent para asegurar que el ref esté listo
+    content: () => componentRef.current, // The content to be printed is the component pointed to by the reference
+    documentTitle: 'CV_Angel_Mateo_Torres_Barco', // PDF file name
+    pageStyle: pageStyle, // Applies the CSS styles defined for the PDF
+    // NEW LOGIC: onBeforeGetContent to ensure the ref is ready
     onBeforeGetContent: () => {
       return new Promise((resolve) => {
-        // Un pequeño retardo para asegurar que el DOM esté completamente listo en el iframe de impresión
+        // A small delay to ensure the DOM is fully ready in the print iframe
         setTimeout(() => {
           if (componentRef.current) {
-            console.log("react-to-print: Ref al componente de CV encontrado.", componentRef.current); // Log para confirmar ref
+            console.log("react-to-print: Ref to CV component found.", componentRef.current); // Log to confirm ref
             resolve();
           } else {
-            console.warn("react-to-print: No se encontró la referencia al contenido del CV para imprimir después del retardo.");
-            resolve(Promise.reject("No content ref")); // Rechaza la promesa para detener la impresión si el ref sigue siendo null
+            console.warn("react-to-print: Could not find reference to CV content for printing after delay.");
+            resolve(Promise.reject("No content ref")); // Reject the promise to stop printing if ref is still null
           }
-        }, 500); // Espera 500 milisegundos (0.5 segundos)
+        }, 500); // Waits 500 milliseconds (0.5 seconds)
       });
     },
   });
 
   return (
     <>
-      {/* Inyecta los estilos personalizados globalmente */}
+      {/* Injects custom styles globally */}
       <style>{customStyles}</style>
 
-      {/* Navbar de Navegación */}
+      {/* Navigation Navbar */}
       <Navbar bg="primary" variant="dark" expand="lg" fixed="top" className="shadow-sm py-3">
         <Container>
-          {/* Botón de Descarga de CV PDF */}
+          {/* Download CV PDF Button */}
           <Button
             variant="info"
             className="fw-bold d-flex align-items-center me-auto order-1 order-lg-0"
             style={{ backgroundColor: 'var(--bs-info)', borderColor: 'var(--bs-info)', color: 'var(--bs-primary)' }}
             onClick={() => {
-              console.log("Botón 'Descargar CV PDF' clicado."); // Log al hacer clic
-              console.log("Estado actual de componentRef.current ANTES de handlePrint:", componentRef.current); // Log del estado del ref
+              console.log("Button 'Descargar CV PDF' clicked."); // Log on click
+              console.log("Current state of componentRef.current BEFORE handlePrint:", componentRef.current); // Log ref state
               if (componentRef.current) {
                 handlePrint();
               } else {
-                console.error("No se puede imprimir: componentRef.current es null.");
-                // Aquí podrías mostrar un mensaje visible al usuario si lo deseas
+                console.error("Cannot print: componentRef.current is null.");
+                // Here you could display a visible message to the user if desired
               }
             }}
           >
             <i className="bi bi-file-earmark-arrow-down me-2"></i> Descargar CV PDF
           </Button>
 
-          {/* Botón de toggle para el navbar en móviles */}
+          {/* Toggle button for mobile navbar */}
           <Navbar.Toggle aria-controls="navbarNav" />
 
-          {/* Enlaces de Navegación */}
+          {/* Navigation Links */}
           <Navbar.Collapse id="navbarNav">
             <Nav className="ms-auto mb-2 mb-lg-0">
               <Nav.Link href="#perfil" className="text-white hover-accent px-lg-3 py-2">Perfil</Nav.Link>
@@ -232,10 +232,10 @@ function App() {
         </Container>
       </Navbar>
 
-      {/* Contenido del CV (el componente que se imprimirá) */}
+      {/* CV Content (the component that will be printed) */}
       <CvContent ref={componentRef} />
     </>
   );
 }
 
-export default App; // Exporta el componente principal de la aplicación
+export default App; // Exports the main application component
