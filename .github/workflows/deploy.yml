@@ -1,33 +1,45 @@
 # .github/workflows/deploy.yml
-name: Deploy to GitHub Pages # Nombre de la rutina de trabajo
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches:
-      - main # Se ejecuta cada vez que hay un 'push' a la rama 'main'
+      - main # Desplegará cuando se haga push a la rama 'main'
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest # Ejecuta en un entorno Ubuntu en los servidores de GitHub
+    runs-on: ubuntu-latest # Ejecutar en un servidor Linux
 
     steps:
-    - name: Checkout repository # Paso 1: Descarga el código de tu repositorio
-      uses: actions/checkout@v3
+      - name: Checkout code # Paso 1: Clonar el repositorio
+        uses: actions/checkout@v3 # Usa la versión 3 de la acción de checkout
 
-    - name: Set up Node.js # Paso 2: Configura Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20' # Usa una versión compatible de Node.js
+      - name: Setup Node.js # Paso 2: Configurar Node.js
+        uses: actions/setup-node@v3 # Usa la versión 3 de setup-node
+        with:
+          node-version: '20' # Usa la versión 20 de Node.js
 
-    - name: Install dependencies # Paso 3: Instala todas las dependencias del proyecto (npm install)
-      run: npm install
+      - name: Install dependencies # Paso 3: Instalar las dependencias del proyecto
+        run: npm install # Ejecuta el comando npm install
 
-    - name: Build application # Paso 4: Compila la aplicación React para producción (npm run build)
-      run: npm run build
+      - name: Build application # Paso 4: Compilar la aplicación React con Vite
+        run: npm run build # Ejecuta el comando de build definido en package.json
 
-    - name: Deploy to GitHub Pages # Paso 5: Despliega los archivos compilados en GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3 # Acción pre-construida para desplegar en GH Pages
-      with:
-        github_token: ${{ secrets.GITHUB_TOKEN }} # Token de GitHub para autenticación (automático)
-        publish_dir: ./dist # La carpeta que se debe publicar (la salida de 'npm run build')
-        # La propiedad 'base' en vite.config.js se encarga de las rutas correctas para GitHub Pages
+      # ¡¡¡NUEVO PASO CRÍTICO!!!
+      # Este paso listará el contenido de la carpeta 'dist' después del build.
+      # La salida de este comando la veremos en los logs de GitHub Actions.
+      - name: List dist contents # Paso 5: Listar contenido de la carpeta de salida
+        run: ls -lR dist/ # 'ls -lR' lista recursivamente todos los archivos y carpetas dentro de 'dist' con detalles
+
+      - name: Deploy to GitHub Pages # Paso 6: Desplegar a GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3 # Usa la acción de peaceiris para gh-pages
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }} # Token de GitHub para permisos
+          publish_dir: ./dist # La carpeta que se debe publicar
+          publish_branch: gh-pages # La rama donde se publicará (GitHub Pages)
+          allow_empty_commit: false # No permitir commits vacíos
+          keep_files: false # Borrar archivos existentes en gh-pages antes de copiar
+          force_orphan: false # Crear una nueva rama gh-pages si no existe
+          enable_jekyll: false # No habilitar Jekyll
+          disable_nojekyll: false # No deshabilitar el .nojekyll (por defecto se crea)
+          exclude_assets: .github # Excluir la carpeta .github del despliegue
