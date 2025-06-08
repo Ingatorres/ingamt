@@ -173,9 +173,8 @@ function App() {
     // Incluimos una validación agresiva para asegurarnos de que el ref no sea null.
     content: () => {
       if (!componentRef.current) {
-        console.error("react-to-print: El componente de CV no está disponible para imprimir.");
-        // Lanzamos un error que será capturado por onPrintError, evitando alert().
-        throw new Error('El contenido del CV no está listo para imprimir. Inténtelo de nuevo.');
+        console.error("react-to-print: El componente de CV no está disponible para imprimir en la función content().");
+        throw new Error('Contenido CV no disponible para impresión.');
       }
       return componentRef.current;
     },
@@ -183,21 +182,14 @@ function App() {
     pageStyle: pageStyle, // Aplica los estilos CSS definidos para el PDF
     removeAfterPrint: true, // Opcional: Remueve el iframe de impresión del DOM después de imprimir
     
-    // Función que se ejecuta antes de obtener el contenido. Útil para asegurar el montaje.
-    onBeforeGetContent: () => {
-      console.log("react-to-print: onBeforeGetContent llamado.");
-      return new Promise((resolve, reject) => {
-        // Un pequeño retardo para asegurar que el DOM esté completamente listo en el iframe de impresión.
-        setTimeout(() => {
-          if (componentRef.current) {
-            console.log("react-to-print: Ref al componente de CV encontrado dentro de onBeforeGetContent.", componentRef.current);
-            resolve();
-          } else {
-            console.warn("react-to-print: No se encontró la referencia al contenido del CV para imprimir después del retardo en onBeforeGetContent.");
-            reject(new Error("No content ref available after delay.")); // Rechaza la promesa si el ref sigue siendo null
-          }
-        }, 500); // Espera 500 milisegundos (0.5 segundos)
-      });
+    // Función que se ejecuta justo antes de la impresión (sincrónico).
+    onBeforePrint: () => {
+      console.log("react-to-print: onBeforePrint llamado. Ref:", componentRef.current);
+      // Podemos añadir un log en el iframe para verificar el contenido allí
+      if (componentRef.current && componentRef.current.ownerDocument) {
+          console.log("react-to-print: Contenido dentro del iframe (si visible):", 
+                      componentRef.current.ownerDocument.body.innerHTML);
+      }
     },
     
     // Función que se ejecuta después de que la impresión finaliza.
@@ -209,7 +201,6 @@ function App() {
     onPrintError: (error) => {
       console.error("react-to-print: Error durante la impresión:", error);
       // Aquí podrías mostrar un mensaje visible al usuario en un modal personalizado, en lugar de alert().
-      // Por ejemplo: showCustomModal("Error al generar el PDF: " + error.message);
     },
   });
 
