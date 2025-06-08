@@ -122,105 +122,113 @@ const customStyles = `
 `;
 
 function App() {
-  // Crea una referencia al componente CvContent para que html2canvas pueda acceder a él.
+  // Creates a reference to the CvContent component so that html2canvas can access it.
   const componentRef = useRef(null);
 
-  // Función para descargar el CV como PDF usando jsPDF y html2canvas
+  // Function to download the CV as PDF using jsPDF and html2canvas
   const handleDownloadPdf = async () => {
-    console.log("Botón 'Descargar CV PDF' clicado.");
-    console.log("Estado actual de componentRef.current ANTES de la captura:", componentRef.current);
+    console.log("Button 'Descargar CV PDF' clicked.");
+    console.log("Current state of componentRef.current BEFORE capture:", componentRef.current);
 
-    const pdf = new jsPDF('p', 'mm', 'a4'); // Crea un nuevo documento PDF (orientación, unidades, tamaño)
-    const imgWidth = 210; // Ancho de una página A4 en mm
-    const pageHeight = 297; // Altura de una página A4 en mm
-    let currentY = 10; // Posición Y inicial para la página (margen superior)
-    const sectionMargin = 10; // Margen entre secciones
+    const input = componentRef.current; // The DOM element of the CV to capture
 
-    // Helper para capturar un elemento y añadirlo al PDF, manejando la paginación
-    const addSectionToPdf = async (elementId, forceNewPage = false) => {
-      const element = componentRef.current.querySelector(`#${elementId}`); // Busca el elemento dentro del ref del CV
-      if (!element) {
-        console.warn(`Sección con ID #${elementId} no encontrada.`);
-        return;
-      }
-
-      // Captura el elemento HTML como un canvas
-      const canvas = await html2canvas(element, {
-        scale: 2, // Aumenta la escala para mejor calidad de imagen en el PDF
-        useCORS: true, // Importante si tienes imágenes de origen cruzado
-        backgroundColor: '#FFFFFF', // Asegura un fondo blanco en la captura
-        logging: false, // Deshabilita logs excesivos de html2canvas para una consola más limpia
-        scrollY: -window.scrollY, // Captura correctamente elementos no en la parte superior del viewport
-        windowWidth: document.documentElement.offsetWidth, // Captura el ancho total del contenido
-        windowHeight: document.documentElement.offsetHeight, // Captura la altura total del contenido
-      });
-
-      const imgData = canvas.toDataURL('image/png'); // Convierte el canvas a una imagen base64
-      const imgHeight = (canvas.height * imgWidth) / canvas.width; // Calcula la altura de la imagen en el PDF manteniendo la relación de aspecto
-
-      // Decide si agregar una nueva página
-      // Se agrega nueva página si:
-      // 1. Se fuerza explícitamente una nueva página (forceNewPage = true)
-      // 2. La sección actual no cabe en el espacio restante de la página actual,
-      //    Y no estamos en la primera sección de la primera página (currentY > 10 para evitar página en blanco al inicio).
-      if (forceNewPage || (currentY + imgHeight + sectionMargin > pageHeight && currentY > 10)) {
-        pdf.addPage();
-        currentY = 10; // Reinicia la posición Y para la nueva página (margen superior)
-      } else if (currentY > 10) { // Si no es la primera sección en la página, añade un margen
-        currentY += sectionMargin;
-      }
-
-      // Agrega la imagen de la sección al PDF
-      pdf.addImage(imgData, 'PNG', 0, currentY, imgWidth, imgHeight);
-      currentY += imgHeight; // Actualiza la posición Y para la siguiente sección
-    };
+    if (!input) {
+      console.error("Could not find reference to CV content to generate PDF.");
+      // You could display a visible message to the user here (using a custom modal).
+      return;
+    }
 
     try {
-      // Página 1: Mi nombre completo, descripción y Trayectoria Profesional
-      // Asegúrate de que Perfil.jsx tenga un ID para el contenedor de nombre/descripción.
-      await addSectionToPdf('perfil-section', false); // Contenedor del perfil (nombre, descripción)
-      await addSectionToPdf('trayectoria', false); // Trayectoria Profesional
+      const pdf = new jsPDF('p', 'mm', 'letter'); // Create a new PDF document (portrait, mm, letter size)
+      const pdfWidth = pdf.internal.pageSize.getWidth(); // Page width (letter in mm)
+      const pdfHeight = pdf.internal.pageSize.getHeight(); // Page height (letter in mm)
+      const margin = 10; // Margen en mm para cada lado de la página (top, right, bottom, left)
+      const contentWidth = pdfWidth - (2 * margin); // Ancho del contenido disponible
+      let currentY = margin; // Posición Y inicial para la página (margen superior)
 
-      // Página 2: Habilidades & Competencias e Integración Humano-IA en Proyectos Reales
-      await addSectionToPdf('habilidades', true); // Fuerza nueva página
-      await addSectionToPdf('integracion-humano-ia', false); // Integración Humano-IA
+      // Definimos los IDs de las secciones en el orden deseado para el PDF
+      // Estos IDs deben estar en los componentes de Perfil, Experiencia, Habilidades, etc.
+      const sections = [
+        { id: 'perfil-header', page: 1, forceNew: false }, // Nombre completo y descripción
+        { id: 'trayectoria', page: 1, forceNew: false },    // Trayectoria Profesional
+        { id: 'habilidades', page: 2, forceNew: true },     // Habilidades & Competencias
+        { id: 'integracion-humano-ia', page: 2, forceNew: false }, // Integración Humano-IA
+        { id: 'formacion', page: 3, forceNew: true },       // Formación Académica & Idiomas
+        { id: 'referencias', page: 3, forceNew: false },    // Referencias Profesionales
+        { id: 'actividades', page: 3, forceNew: false }     // Actividades Complementarias
+      ];
 
-      // Página 3: Formación Académica & Idiomas, Referencias Profesionales y Actividades Complementarias
-      await addSectionToPdf('formacion', true); // Fuerza nueva página
-      await addSectionToPdf('referencias', false);
-      await addSectionToPdf('actividades', false);
+      for (const section of sections) {
+        const element = input.querySelector(`#${section.id}`);
+        if (!element) {
+          console.warn(`Section with ID #${section.id} not found. Skipping.`);
+          continue;
+        }
 
-      pdf.save('CV_Angel_Mateo_Torres_Barco.pdf'); // Guarda el PDF con el nombre especificado
-      console.log("PDF generado y descargado exitosamente.");
+        const canvas = await html2canvas(element, {
+          scale: 2, // Increase scale for better image quality in the PDF
+          useCORS: true, // Important if you have cross-origin images
+          backgroundColor: '#FFFFFF', // Ensures a white background in the capture
+          logging: false, // Disable excessive html2canvas logs for a cleaner console
+          // Important: html2canvas captures the current scroll position, so ensure the element is visible
+          // Or, let html2canvas handle scrolling its own internal window.
+          windowWidth: element.scrollWidth, // Capture the full width of the element's content
+          windowHeight: element.scrollHeight, // Capture the full height of the element's content
+        });
+
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height * contentWidth) / canvas.width; // Calculate image height to fit content width
+
+        // Add new page if forced, or if section won't fit on current page and it's not the very first content
+        if (section.forceNew || (currentY + imgHeight + margin > pdfHeight && currentY !== margin)) {
+          pdf.addPage();
+          currentY = margin; // Reset Y position for new page
+        }
+
+        // Add image to PDF
+        pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, imgHeight);
+        currentY += imgHeight + margin; // Update Y position for next section, adding a margin between sections
+
+        // If it's the last section for a given page group, reset Y for next page
+        // This ensures the next section starts fresh on a new page as per pagination plan.
+        if (section.page === 1 && section.id === 'trayectoria' ||
+            section.page === 2 && section.id === 'integracion-humano-ia') {
+            pdf.addPage();
+            currentY = margin;
+        }
+      }
+
+      pdf.save('CV_Angel_Mateo_Torres_Barco.pdf'); // Save the PDF with the specified name
+      console.log("PDF generated and downloaded successfully.");
 
     } catch (error) {
-      console.error("Error al generar el PDF:", error);
-      // Aquí podrías mostrar un mensaje de error amigable al usuario en un modal.
+      console.error("Error generating PDF:", error);
+      // You could display a friendly error message to the user in a modal here.
     }
   };
 
   return (
     <>
-      {/* Inyecta los estilos personalizados globalmente */}
+      {/* Injects custom styles globally */}
       <style>{customStyles}</style>
 
-      {/* Navbar de Navegación */}
+      {/* Navigation Navbar */}
       <Navbar bg="primary" variant="dark" expand="lg" fixed="top" className="shadow-sm py-3">
         <Container>
-          {/* Botón de Descarga de CV PDF */}
+          {/* Download CV PDF Button */}
           <Button
             variant="info"
             className="fw-bold d-flex align-items-center me-auto order-1 order-lg-0"
             style={{ backgroundColor: 'var(--bs-info)', borderColor: 'var(--bs-info)', color: 'var(--bs-primary)' }}
-            onClick={handleDownloadPdf} // Llamamos a la nueva función de descarga
+            onClick={handleDownloadPdf} // Call the new download function
           >
             <i className="bi bi-file-earmark-arrow-down me-2"></i> Descargar CV PDF
           </Button>
 
-          {/* Botón de toggle para el navbar en móviles */}
+          {/* Toggle button for mobile navbar */}
           <Navbar.Toggle aria-controls="navbarNav" />
 
-          {/* Enlaces de Navegación */}
+          {/* Navigation Links */}
           <Navbar.Collapse id="navbarNav">
             <Nav className="ms-auto mb-2 mb-lg-0">
               <Nav.Link href="#perfil" className="text-white hover-accent px-lg-3 py-2">Perfil</Nav.Link>
@@ -234,11 +242,11 @@ function App() {
         </Container>
       </Navbar>
 
-      {/* Contenido del CV (el componente que se imprimirá) */}
-      {/* El componente CvContent seguirá utilizando el ref para que html2canvas pueda acceder a su DOM. */}
+      {/* CV Content (the component that will be printed) */}
+      {/* The CvContent component will continue to use the ref so html2canvas can access its DOM. */}
       <CvContent ref={componentRef} />
     </>
   );
 }
 
-export default App; // Exporta el componente principal de la aplicación
+export default App; // Exports the main application component

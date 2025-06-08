@@ -8,7 +8,7 @@ const Perfil = () => {
 
   return (
     <section id="perfil" className="my-5 p-4 bg-light shadow rounded-lg text-center">
-      <div id="perfil-section" className="mb-4"> {/* Añadimos un ID para capturar esta sección */}
+      <div id="perfil-header" className="mb-4"> {/* ID para la primera parte de la página 1 */}
         {/* Foto de perfil */}
         <div className="d-flex justify-content-center mb-4">
           <img

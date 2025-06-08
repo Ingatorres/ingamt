@@ -47,4 +47,4 @@ const CvContent = forwardRef((props, ref) => {
   );
 });
 
-export default CvContent; // Exports the component
+export default CvContent; // Exporta el componente

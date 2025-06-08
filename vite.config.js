@@ -1,19 +1,15 @@
 // vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path'; // Importa el módulo 'path' de Node.js
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
-  base: '/ingamt/',
+  // **¡IMPORTANTE!** La base del despliegue para GitHub Pages.
+  // Esta debe coincidir EXACTAMENTE con el nombre de tu repositorio de GitHub,
+  // incluyendo las barras diagonales al principio y al final.
+  base: '/ingamt/', // <--- ¡Asegúrate que sea el nombre EXACTO de tu repositorio!
   build: {
-    outDir: 'dist',
-  },
-  // Alternativa para resolver la importación de bootstrap-icons.css
-  resolve: {
-    alias: {
-      'bootstrap-icons/font': path.resolve(__dirname, 'node_modules/bootstrap-icons/font'),
-    },
-  },
+    outDir: 'dist', // La carpeta de salida por defecto para los archivos compilados
+  }
 });
