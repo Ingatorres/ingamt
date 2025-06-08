@@ -1,8 +1,12 @@
 // src/App.jsx
 import React, { useRef } from 'react';
-import { useReactToPrint } from 'react-to-print';
+// Eliminamos la importación de useReactToPrint
 import { Navbar, Nav, Button, Container } from 'react-bootstrap'; // Importa componentes de react-bootstrap
 import CvContent from './components/CvContent'; // Importa el componente que contiene el CV
+
+// Importamos las nuevas librerías para la generación de PDF
+import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 // Define aquí los estilos personalizados para Bootstrap
 // Estos estilos se aplican globalmente a la aplicación.
@@ -117,92 +121,83 @@ const customStyles = `
   }
 `;
 
-// Estilos específicos para la impresión en PDF (oculta elementos no deseados y ajusta el layout)
-// Se inyectan con 'react-to-print' para una impresión de alta fidelidad.
-const pageStyle = `
-  @page {
-    size: A4;
-    margin: 20mm;
-  }
-
-  /* Oculta el navbar y el botón de descarga en la versión PDF */
-  .navbar, .pdf-hide {
-    display: none !important;
-  }
-
-  /* Asegura que los fondos se impriman correctamente y evita el "velo gris" */
-  body {
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-    background-color: white !important;
-  }
-
-  .card, .bg-light, .bg-info-subtle {
-    background-color: white !important;
-    border-color: var(--bs-info-border-subtle) !important;
-  }
-
-  /* Fuerza saltos de página para secciones principales para una mejor paginación */
-  #trayectoria, #habilidades, #formacion, #referencias, #actividades {
-    page-break-before: always;
-  }
-
-  /* Estilo para el pie de página que aparece en cada hoja del PDF */
-  .pdf-footer-content::after {
-    content: "Documento elaborado por Ing. Ángel Mateo Torres – con apoyo estratégico de IA generativa.";
-    display: block;
-    position: fixed; /* Cambiado a fixed para asegurar que se repita en cada página */
-    bottom: 10mm;
-    left: 0;
-    right: 0;
-    text-align: center;
-    font-size: 9px;
-    color: #555 !important;
-    padding: 5px 0;
-  }
-`;
-
 function App() {
-  // Crea una referencia al componente CvContent para que react-to-print pueda acceder a él.
-  // Inicializamos con null explícitamente para mayor claridad.
+  // Crea una referencia al componente CvContent para que html2canvas pueda acceder a él.
   const componentRef = useRef(null);
 
-  // Configura la función de impresión
-  const handlePrint = useReactToPrint({
-    // La función 'content' debe devolver el nodo DOM a imprimir.
-    // Incluimos una validación agresiva para asegurarnos de que el ref no sea null.
-    content: () => {
-      if (!componentRef.current) {
-        console.error("react-to-print: El componente de CV no está disponible para imprimir en la función content().");
-        throw new Error('Contenido CV no disponible para impresión.');
+  // Función para descargar el CV como PDF usando jsPDF y html2canvas
+  const handleDownloadPdf = async () => {
+    console.log("Botón 'Descargar CV PDF' clicado.");
+    console.log("Estado actual de componentRef.current ANTES de la captura:", componentRef.current);
+
+    const pdf = new jsPDF('p', 'mm', 'a4'); // Crea un nuevo documento PDF (orientación, unidades, tamaño)
+    const imgWidth = 210; // Ancho de una página A4 en mm
+    const pageHeight = 297; // Altura de una página A4 en mm
+    let currentY = 10; // Posición Y inicial para la página (margen superior)
+    const sectionMargin = 10; // Margen entre secciones
+
+    // Helper para capturar un elemento y añadirlo al PDF, manejando la paginación
+    const addSectionToPdf = async (elementId, forceNewPage = false) => {
+      const element = componentRef.current.querySelector(`#${elementId}`); // Busca el elemento dentro del ref del CV
+      if (!element) {
+        console.warn(`Sección con ID #${elementId} no encontrada.`);
+        return;
       }
-      return componentRef.current;
-    },
-    documentTitle: 'CV_Angel_Mateo_Torres_Barco', // Nombre del archivo PDF
-    pageStyle: pageStyle, // Aplica los estilos CSS definidos para el PDF
-    removeAfterPrint: true, // Opcional: Remueve el iframe de impresión del DOM después de imprimir
-    
-    // Función que se ejecuta justo antes de la impresión (sincrónico).
-    onBeforePrint: () => {
-      console.log("react-to-print: onBeforePrint llamado. Ref:", componentRef.current);
-      // Podemos añadir un log en el iframe para verificar el contenido allí
-      if (componentRef.current && componentRef.current.ownerDocument) {
-          console.log("react-to-print: Contenido dentro del iframe (si visible):", 
-                      componentRef.current.ownerDocument.body.innerHTML);
+
+      // Captura el elemento HTML como un canvas
+      const canvas = await html2canvas(element, {
+        scale: 2, // Aumenta la escala para mejor calidad de imagen en el PDF
+        useCORS: true, // Importante si tienes imágenes de origen cruzado
+        backgroundColor: '#FFFFFF', // Asegura un fondo blanco en la captura
+        logging: false, // Deshabilita logs excesivos de html2canvas para una consola más limpia
+        scrollY: -window.scrollY, // Captura correctamente elementos no en la parte superior del viewport
+        windowWidth: document.documentElement.offsetWidth, // Captura el ancho total del contenido
+        windowHeight: document.documentElement.offsetHeight, // Captura la altura total del contenido
+      });
+
+      const imgData = canvas.toDataURL('image/png'); // Convierte el canvas a una imagen base64
+      const imgHeight = (canvas.height * imgWidth) / canvas.width; // Calcula la altura de la imagen en el PDF manteniendo la relación de aspecto
+
+      // Decide si agregar una nueva página
+      // Se agrega nueva página si:
+      // 1. Se fuerza explícitamente una nueva página (forceNewPage = true)
+      // 2. La sección actual no cabe en el espacio restante de la página actual,
+      //    Y no estamos en la primera sección de la primera página (currentY > 10 para evitar página en blanco al inicio).
+      if (forceNewPage || (currentY + imgHeight + sectionMargin > pageHeight && currentY > 10)) {
+        pdf.addPage();
+        currentY = 10; // Reinicia la posición Y para la nueva página (margen superior)
+      } else if (currentY > 10) { // Si no es la primera sección en la página, añade un margen
+        currentY += sectionMargin;
       }
-    },
-    
-    // Función que se ejecuta después de que la impresión finaliza.
-    onAfterPrint: () => {
-      console.log("react-to-print: Impresión finalizada.");
-    },
-    
-    // Función que se ejecuta si ocurre un error durante el proceso de impresión.
-    onPrintError: (error) => {
-      console.error("react-to-print: Error durante la impresión:", error);
-      // Aquí podrías mostrar un mensaje visible al usuario en un modal personalizado, en lugar de alert().
-    },
-  });
+
+      // Agrega la imagen de la sección al PDF
+      pdf.addImage(imgData, 'PNG', 0, currentY, imgWidth, imgHeight);
+      currentY += imgHeight; // Actualiza la posición Y para la siguiente sección
+    };
+
+    try {
+      // Página 1: Mi nombre completo, descripción y Trayectoria Profesional
+      // Asegúrate de que Perfil.jsx tenga un ID para el contenedor de nombre/descripción.
+      await addSectionToPdf('perfil-section', false); // Contenedor del perfil (nombre, descripción)
+      await addSectionToPdf('trayectoria', false); // Trayectoria Profesional
+
+      // Página 2: Habilidades & Competencias e Integración Humano-IA en Proyectos Reales
+      await addSectionToPdf('habilidades', true); // Fuerza nueva página
+      await addSectionToPdf('integracion-humano-ia', false); // Integración Humano-IA
+
+      // Página 3: Formación Académica & Idiomas, Referencias Profesionales y Actividades Complementarias
+      await addSectionToPdf('formacion', true); // Fuerza nueva página
+      await addSectionToPdf('referencias', false);
+      await addSectionToPdf('actividades', false);
+
+      pdf.save('CV_Angel_Mateo_Torres_Barco.pdf'); // Guarda el PDF con el nombre especificado
+      console.log("PDF generado y descargado exitosamente.");
+
+    } catch (error) {
+      console.error("Error al generar el PDF:", error);
+      // Aquí podrías mostrar un mensaje de error amigable al usuario en un modal.
+    }
+  };
 
   return (
     <>
@@ -217,18 +212,7 @@ function App() {
             variant="info"
             className="fw-bold d-flex align-items-center me-auto order-1 order-lg-0"
             style={{ backgroundColor: 'var(--bs-info)', borderColor: 'var(--bs-info)', color: 'var(--bs-primary)' }}
-            onClick={() => {
-              console.log("Botón 'Descargar CV PDF' clicado."); // Log al hacer clic
-              console.log("Estado actual de componentRef.current ANTES de handlePrint execution:", componentRef.current); // Log del estado del ref
-              
-              // Validamos el ref antes de llamar a handlePrint.
-              if (componentRef.current) {
-                handlePrint();
-              } else {
-                console.error("Verificación manual: componentRef.current es null. No se puede iniciar la impresión.");
-                // Aquí también podrías mostrar un modal al usuario si lo deseas.
-              }
-            }}
+            onClick={handleDownloadPdf} // Llamamos a la nueva función de descarga
           >
             <i className="bi bi-file-earmark-arrow-down me-2"></i> Descargar CV PDF
           </Button>
@@ -251,6 +235,7 @@ function App() {
       </Navbar>
 
       {/* Contenido del CV (el componente que se imprimirá) */}
+      {/* El componente CvContent seguirá utilizando el ref para que html2canvas pueda acceder a su DOM. */}
       <CvContent ref={componentRef} />
     </>
   );

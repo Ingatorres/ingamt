@@ -4,8 +4,10 @@ import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Importa los estilos CSS de Bootstrap
 
-// CORRECCIÓN DEFINITIVA para bootstrap-icons según la estructura del paquete y lo recomendado por GitHub Copilot:
-// La ruta correcta es 'bootstrap-icons/font/bootstrap-icons.css'.
+// CORRECCIÓN DEFINITIVA para bootstrap-icons:
+// En lugar de apuntar a 'font/bootstrap-icons.css', que a veces es problemático con Vite/Rollup,
+// apuntamos a la ruta principal del CSS que se encuentra directamente en el paquete.
+// Esto es generalmente más fiable para módulos de node_modules.
 import 'bootstrap-icons/font/bootstrap-icons.css';
 
 

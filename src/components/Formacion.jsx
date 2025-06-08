@@ -39,18 +39,17 @@ const Formacion = () => {
         </div>
       </div>
 
-      {/* Botón para Credenciales de LinkedIn */}
-      <div className="text-center mt-4">
-        <a
-          href={formacionIdiomas.credencialesLinkedIn}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="btn btn-info fw-bold d-flex align-items-center justify-content-center mx-auto"
-          style={{ backgroundColor: 'var(--bs-info)', borderColor: 'var(--bs-info)', color: 'var(--bs-primary)', maxWidth: '300px' }}
-        >
-          <i className="bi bi-award-fill me-2"></i> Ver Credenciales de LinkedIn
-        </a>
-      </div>
+      {/* Enlace para Credenciales de LinkedIn - Mostrando solo la URL */}
+      {formacionIdiomas.credencialesLinkedIn && (
+        <div className="text-center mt-4 text-dark">
+          <p className="mb-0">
+            <i className="bi bi-award-fill me-2 text-info"></i> Credenciales en LinkedIn:{" "}
+            <a href={formacionIdiomas.credencialesLinkedIn} target="_blank" rel="noopener noreferrer" className="text-dark text-decoration-none hover-accent">
+              {formacionIdiomas.credencialesLinkedIn}
+            </a>
+          </p>
+        </div>
+      )}
     </section>
   );
 };
