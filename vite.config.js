@@ -8,7 +8,7 @@ export default defineConfig({
   // **¡IMPORTANTE!** La base del despliegue para GitHub Pages.
   // Esta debe coincidir EXACTAMENTE con el nombre de tu repositorio de GitHub,
   // incluyendo las barras diagonales al principio y al final.
-  base: '/angel-mateo-cv/', // <--- ¡Verifica y asegúrate de que sea el nombre EXACTO de tu repositorio!
+  base: '/ingamt/', // <--- ¡CORREGIDO: Ahora coincide con tu repositorio 'ingamt'!
   build: {
     outDir: 'dist', // La carpeta de salida por defecto para los archivos compilados
   }
