@@ -7,7 +7,7 @@ import Formacion from './Formacion';
 import Referencias from './Referencias';
 import Actividades from './Actividades';
 import cvData from '../data'; // Imports data for the footer
-import ErrorBoundary from './ErrorBoundary'; // Import the ErrorBoundary component
+import ErrorBoundary from './ErrorBoundary'; // Importa el componente ErrorBoundary
 
 // CvContent is the component that groups all sections of the CV.
 // Uses forwardRef so that react-to-print can access its DOM.

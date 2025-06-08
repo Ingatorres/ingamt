@@ -163,82 +163,89 @@ const pageStyle = `
 `;
 
 function App() {
-  // Creates a reference to the CvContent component so react-to-print can access it
-  const componentRef = useRef();
+  // Crea una referencia al componente CvContent para que react-to-print pueda acceder a él.
+  // Inicializamos con null explícitamente para mayor claridad.
+  const componentRef = useRef(null);
 
-  // Configures the print function
+  // Configura la función de impresión
   const handlePrint = useReactToPrint({
-    // Aggressive validation: throw an error if ref is null
+    // La función 'content' debe devolver el nodo DOM a imprimir.
+    // Incluimos una validación agresiva para asegurarnos de que el ref no sea null.
     content: () => {
       if (!componentRef.current) {
-        console.error("react-to-print: componentRef.current is null when 'content' function is called.");
-        // Instead of alert, you might use a custom modal or just throw,
-        // as the onPrintError will catch it.
+        console.error("react-to-print: El componente de CV no está disponible para imprimir.");
+        // Lanzamos un error que será capturado por onPrintError, evitando alert().
         throw new Error('El contenido del CV no está listo para imprimir. Inténtelo de nuevo.');
       }
       return componentRef.current;
     },
-    documentTitle: 'CV_Angel_Mateo_Torres_Barco', // PDF file name
-    pageStyle: pageStyle, // Applies the CSS styles defined for the PDF
+    documentTitle: 'CV_Angel_Mateo_Torres_Barco', // Nombre del archivo PDF
+    pageStyle: pageStyle, // Aplica los estilos CSS definidos para el PDF
+    removeAfterPrint: true, // Opcional: Remueve el iframe de impresión del DOM después de imprimir
+    
+    // Función que se ejecuta antes de obtener el contenido. Útil para asegurar el montaje.
     onBeforeGetContent: () => {
-      console.log("react-to-print: onBeforeGetContent called.");
-      return new Promise((resolve) => {
-        // A small delay to ensure the DOM is fully ready in the print iframe
+      console.log("react-to-print: onBeforeGetContent llamado.");
+      return new Promise((resolve, reject) => {
+        // Un pequeño retardo para asegurar que el DOM esté completamente listo en el iframe de impresión.
         setTimeout(() => {
           if (componentRef.current) {
-            console.log("react-to-print: Ref to CV component found inside onBeforeGetContent.", componentRef.current); // Log to confirm ref
+            console.log("react-to-print: Ref al componente de CV encontrado dentro de onBeforeGetContent.", componentRef.current);
             resolve();
           } else {
-            console.warn("react-to-print: Could not find reference to CV content for printing after delay inside onBeforeGetContent.");
-            // If the ref is still null here, we can reject, and onPrintError will be called.
-            resolve(Promise.reject(new Error("No content ref available after delay.")));
+            console.warn("react-to-print: No se encontró la referencia al contenido del CV para imprimir después del retardo en onBeforeGetContent.");
+            reject(new Error("No content ref available after delay.")); // Rechaza la promesa si el ref sigue siendo null
           }
-        }, 500); // Waits 500 milliseconds (0.5 seconds)
+        }, 500); // Espera 500 milisegundos (0.5 segundos)
       });
     },
+    
+    // Función que se ejecuta después de que la impresión finaliza.
     onAfterPrint: () => {
-      console.log("react-to-print: Printing finished.");
+      console.log("react-to-print: Impresión finalizada.");
     },
+    
+    // Función que se ejecuta si ocurre un error durante el proceso de impresión.
     onPrintError: (error) => {
-      console.error("react-to-print: Error during printing:", error);
-      // You can display a user-friendly message here, e.g., using a custom modal
-      // alert("Error al generar el PDF: " + error.message); // DO NOT USE alert()
+      console.error("react-to-print: Error durante la impresión:", error);
+      // Aquí podrías mostrar un mensaje visible al usuario en un modal personalizado, en lugar de alert().
+      // Por ejemplo: showCustomModal("Error al generar el PDF: " + error.message);
     },
   });
 
   return (
     <>
-      {/* Injects custom styles globally */}
+      {/* Inyecta los estilos personalizados globalmente */}
       <style>{customStyles}</style>
 
-      {/* Navigation Navbar */}
+      {/* Navbar de Navegación */}
       <Navbar bg="primary" variant="dark" expand="lg" fixed="top" className="shadow-sm py-3">
         <Container>
-          {/* Download CV PDF Button */}
+          {/* Botón de Descarga de CV PDF */}
           <Button
             variant="info"
             className="fw-bold d-flex align-items-center me-auto order-1 order-lg-0"
             style={{ backgroundColor: 'var(--bs-info)', borderColor: 'var(--bs-info)', color: 'var(--bs-primary)' }}
             onClick={() => {
-              console.log("Button 'Descargar CV PDF' clicked."); // Log on click
-              console.log("Current state of componentRef.current BEFORE handlePrint execution:", componentRef.current); // Log ref state
+              console.log("Botón 'Descargar CV PDF' clicado."); // Log al hacer clic
+              console.log("Estado actual de componentRef.current ANTES de handlePrint execution:", componentRef.current); // Log del estado del ref
               
-              // Direct validation before calling handlePrint
+              // Validamos el ref antes de llamar a handlePrint.
               if (componentRef.current) {
                 handlePrint();
               } else {
-                console.error("Manual check: componentRef.current is null. Cannot trigger print.");
-                // alert("El CV no está completamente cargado. Inténtelo de nuevo."); // DO NOT USE alert()
+                console.error("Verificación manual: componentRef.current es null. No se puede iniciar la impresión.");
+                // Aquí también podrías mostrar un modal al usuario si lo deseas.
               }
             }}
           >
             <i className="bi bi-file-earmark-arrow-down me-2"></i> Descargar CV PDF
           </Button>
 
-          {/* Toggle button for mobile navbar */}
+          {/* Botón de toggle para el navbar en móviles */}
           <Navbar.Toggle aria-controls="navbarNav" />
 
-          {/* Navigation Links */}
+          {/* Enlaces de Navegación */}
           <Navbar.Collapse id="navbarNav">
             <Nav className="ms-auto mb-2 mb-lg-0">
               <Nav.Link href="#perfil" className="text-white hover-accent px-lg-3 py-2">Perfil</Nav.Link>
@@ -252,10 +259,10 @@ function App() {
         </Container>
       </Navbar>
 
-      {/* CV Content (the component that will be printed) */}
+      {/* Contenido del CV (el componente que se imprimirá) */}
       <CvContent ref={componentRef} />
     </>
   );
 }
 
-export default App; // Exports the main application component
+export default App; // Exporta el componente principal de la aplicación
