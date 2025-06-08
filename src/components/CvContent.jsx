@@ -36,7 +36,7 @@ const CvContent = forwardRef((props, ref) => {
         <ErrorBoundary><Habilidades /></ErrorBoundary>
         <ErrorBoundary><Formacion /></ErrorBoundary>
         <ErrorBoundary><Referencias /></ErrorBoundary>
-        <ErrorBoundary><Actividades /></Actividades>
+        <ErrorBoundary><Actividades /></ErrorBoundary> {/* CORRECCIÓN: La etiqueta de cierre es para ErrorBoundary */}
       </main>
 
       {/* CV Footer, also included in the PDF */}
