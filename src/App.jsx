@@ -171,14 +171,21 @@ function App() {
     content: () => componentRef.current, // El contenido a imprimir es el componente al que apunta la referencia
     documentTitle: 'CV_Angel_Mateo_Torres_Barco', // Nombre del archivo PDF
     pageStyle: pageStyle, // Aplica los estilos CSS definidos para el PDF
-    // Asegura que el ref esté presente antes de intentar imprimir
+    // NUEVA LÓGICA: onBeforeGetContent para asegurar que el ref esté listo
     onBeforeGetContent: () => {
-      if (!componentRef.current) {
-        console.warn("No se encontró la referencia al contenido del CV para imprimir.");
-        return Promise.reject("No content ref"); // Evita que se intente imprimir sin contenido
-      }
-      return Promise.resolve();
-    }
+      return new Promise((resolve) => {
+        // Un pequeño retardo para asegurar que el DOM esté completamente listo en el iframe de impresión
+        setTimeout(() => {
+          if (componentRef.current) {
+            console.log("react-to-print: Ref al componente de CV encontrado.", componentRef.current); // Log para confirmar ref
+            resolve();
+          } else {
+            console.warn("react-to-print: No se encontró la referencia al contenido del CV para imprimir después del retardo.");
+            resolve(Promise.reject("No content ref")); // Rechaza la promesa para detener la impresión si el ref sigue siendo null
+          }
+        }, 500); // Espera 500 milisegundos (0.5 segundos)
+      });
+    },
   });
 
   return (
@@ -194,7 +201,16 @@ function App() {
             variant="info"
             className="fw-bold d-flex align-items-center me-auto order-1 order-lg-0"
             style={{ backgroundColor: 'var(--bs-info)', borderColor: 'var(--bs-info)', color: 'var(--bs-primary)' }}
-            onClick={handlePrint} // Llama a la función de impresión al hacer clic
+            onClick={() => {
+              console.log("Botón 'Descargar CV PDF' clicado."); // Log al hacer clic
+              console.log("Estado actual de componentRef.current ANTES de handlePrint:", componentRef.current); // Log del estado del ref
+              if (componentRef.current) {
+                handlePrint();
+              } else {
+                console.error("No se puede imprimir: componentRef.current es null.");
+                // Aquí podrías mostrar un mensaje visible al usuario si lo deseas
+              }
+            }}
           >
             <i className="bi bi-file-earmark-arrow-down me-2"></i> Descargar CV PDF
           </Button>
