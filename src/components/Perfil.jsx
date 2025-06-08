@@ -7,8 +7,8 @@ const Perfil = () => {
   const { personal } = cvData; // Desestructura los datos personales
 
   return (
-    <section id="perfil" className="my-5 p-4 bg-light shadow rounded-lg text-center">
-      <div id="perfil-header" className="mb-4"> {/* ID para la primera parte de la página 1 */}
+    <section id="perfil-section" className="my-5 p-4 bg-light shadow rounded-lg text-center"> {/* ID para toda la sección de perfil */}
+      <div className="mb-4">
         {/* Foto de perfil */}
         <div className="d-flex justify-content-center mb-4">
           <img

@@ -57,7 +57,7 @@ const Habilidades = () => {
         </div>
       </div>
 
-      {/* Sección de Integración Humano-IA - AÑADIMOS UN ID */}
+      {/* Sección de Integración Humano-IA */}
       <div id="integracion-humano-ia" className="p-4 bg-info-subtle rounded-lg shadow-sm border-start border-success border-4">
         <h3 className="h4 fw-bold text-primary mb-3 text-center"><i className="bi bi-robot me-2"></i> Integración Humano-IA en Proyectos Reales</h3>
         <ul className="list-unstyled text-dark">
