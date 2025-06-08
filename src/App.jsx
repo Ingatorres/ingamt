@@ -3,10 +3,6 @@ import React, { useRef } from 'react';
 import { Navbar, Nav, Button, Container } from 'react-bootstrap';
 import CvContent from './components/CvContent';
 
-// Importamos las librerías para la generación de PDF
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
-
 // Define aquí los estilos personalizados para Bootstrap
 // Estos estilos se aplican globalmente a la aplicación.
 const customStyles = `
@@ -121,90 +117,80 @@ const customStyles = `
 `;
 
 function App() {
-  // Crea una referencia al componente CvContent para que html2canvas pueda acceder a él.
+  // Crea una referencia al componente CvContent para obtener su HTML.
   const cvContentRef = useRef(null);
 
-  // Función para descargar el CV como PDF usando jsPDF y html2canvas
+  // **¡IMPORTANTE!** ESTE ES EL URL DE TU APLICACIÓN WEB DE APPS SCRIPT
+  const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby-vC2k9D6YwuMi7wzEE8TT2s-4jq24R7WiLmMgeERTu8us1FBkN3WmXtZ1_hELnEE/exec'; 
+
+  // Función para descargar el CV como PDF utilizando Google Apps Script
   const handleDownloadPdf = async () => {
     console.log("Botón 'Descargar CV PDF' clicado.");
-    console.log("Estado actual de cvContentRef.current ANTES de la captura:", cvContentRef.current);
+    console.log("Intentando obtener HTML de cvContentRef.current:", cvContentRef.current);
 
     if (!cvContentRef.current) {
-      console.error("No se encontró la referencia al contenido del CV para generar el PDF.");
-      // Aquí podrías mostrar un mensaje visible al usuario si lo deseas (usando un modal).
+      console.error("No se encontró la referencia al contenido del CV. Asegúrate de que el componente CvContent esté montado.");
+      alert("Error: El contenido del CV no está listo. Por favor, intente de nuevo."); // Usamos alert temporalmente para el usuario.
       return;
     }
 
+    // Clonar el elemento para asegurar que no modificamos el DOM original
+    const printableElement = cvContentRef.current.cloneNode(true);
+
+    // Opcional: Eliminar cualquier elemento que no quieras en el PDF (e.g., botones, navbars)
+    // En este caso, como solo capturamos el contenido, no el navbar, no es estrictamente necesario aquí.
+    // Pero si tuvieras otros elementos en cvContentRef que no quieres en el PDF, podrías eliminarlos del clone.
+
+    // Extraer el HTML de la sección de CV.
+    // Si tu CV incluye imágenes con rutas relativas,
+    // asegúrate de que el Apps Script pueda resolverlas o que las rutas sean absolutas.
+    // Para las imágenes en la carpeta public, la ruta será absoluta desde la raíz de tu GH Pages.
+    // Ej: `<img src="https://ingatorres.github.io/ingamt/CVPh.jpg"`
+    // Vamos a reemplazar src de la imagen de perfil para que sea una URL absoluta en el HTML enviado.
+    const imgSrc = `${window.location.origin}${import.meta.env.BASE_URL}CVPh.jpg`;
+    const tempDiv = document.createElement('div');
+    tempDiv.appendChild(printableElement);
+    let htmlContent = tempDiv.innerHTML;
+
+    // Reemplaza la ruta relativa de la imagen de perfil por una URL absoluta en el HTML
+    // Esto es crucial para que Google Docs pueda cargar la imagen desde internet.
+    htmlContent = htmlContent.replace(/src="(\/?CVPh\.jpg)"/, `src="${imgSrc}"`);
+    console.log("HTML a enviar (parcial):", htmlContent.substring(0, 500) + "..."); // Mostrar un fragmento del HTML
+
+    // ¡Ya no es necesario verificar el placeholder, ya lo he reemplazado!
+    // if (APPS_SCRIPT_WEB_APP_URL === 'TU_URL_DE_APPS_SCRIPT_AQUI') {
+    //     console.error("Error: Por favor, actualiza APPS_SCRIPT_WEB_APP_URL en App.jsx con el URL de tu Apps Script Web App.");
+    //     alert("Error de configuración: URL de Apps Script no definida.");
+    //     return;
+    // }
+
     try {
-      const pdf = new jsPDF('p', 'mm', 'letter'); // Crea un nuevo documento PDF (orientación, unidades, tamaño carta)
-      const pdfWidth = pdf.internal.pageSize.getWidth(); // Ancho de una página carta en mm
-      const pdfHeight = pdf.internal.pageSize.getHeight(); // Altura de una página carta en mm
-      const margin = 10; // Margen en mm para cada lado de la página
-      const contentWidth = pdfWidth - (2 * margin); // Ancho disponible para el contenido
+      // Envía el HTML a la aplicación web de Apps Script
+      const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
+        method: 'POST',
+        // Content-Type: application/x-www-form-urlencoded es común para Apps Script doPost
+        // También puedes usar 'application/json' si tu doPost espera JSON,
+        // pero para simplicity con parámetros, form-urlencoded es más directo.
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        // Codifica el HTML para enviarlo como un parámetro
+        body: `htmlContent=${encodeURIComponent(htmlContent)}`,
+      });
 
-      // Función auxiliar para capturar y añadir una sección al PDF
-      const addSectionToPdf = async (elementId, startNewPage = false) => {
-        const element = cvContentRef.current.querySelector(`#${elementId}`);
-        if (!element) {
-          console.warn(`Sección con ID #${elementId} no encontrada. Saltando.`);
-          return null; // Retorna null para indicar que la sección no se pudo añadir
-        }
+      const result = await response.json();
 
-        const canvas = await html2canvas(element, {
-          scale: 2, // Mayor escala para mejor calidad
-          useCORS: true,
-          backgroundColor: '#FFFFFF', // Fondo blanco explícito
-          logging: false, // Deshabilita logs de html2canvas
-          windowWidth: element.scrollWidth, // Captura el ancho completo del elemento
-          windowHeight: element.scrollHeight, // Captura la altura completa del elemento
-        });
-
-        const imgData = canvas.toDataURL('image/png');
-        const imgHeight = (canvas.height * contentWidth) / canvas.width; // Calcula la altura proporcional al ancho del PDF
-
-        // Si se fuerza una nueva página o la imagen excede la altura de la página, añade una página.
-        // Aseguramos que no añada una página extra si es la primera sección de la primera página.
-        if (startNewPage && pdf.internal.getNumberOfPages() > 0) { // Fuerza nueva página si no es la primera sección en absoluto
-            pdf.addPage();
-        } else if (imgHeight > pdfHeight - margin * 2 && pdf.internal.getNumberOfPages() > 0) { // Si una sola sección es muy larga y no cabe
-             // Si la sección es más grande que una página completa, html2canvas la capturará toda y addImage la dibujará.
-             // Aquí se podría implementar lógica para cortar y añadir en múltiples addImage si la sección es *mucho* más grande
-             // pero para CVs, generalmente html2canvas hace un buen trabajo si se le da el elemento completo.
-             console.warn(`Sección #${elementId} excede la altura de una sola página. Puede recortarse si no hay espacio.`);
-             pdf.addPage(); // Añade una página si excede el espacio restante en la actual.
-        }
-
-        // Agrega la imagen de la sección al PDF
-        pdf.addImage(imgData, 'PNG', margin, margin, contentWidth, imgHeight); // Siempre empieza en el margen superior de la página actual
-        
-        // Return pdf object to allow chaining or page manipulation
-        return { pdf, imgHeight, contentWidth };
-      };
-
-      // PAGE 1: Mi nombre completo, descripción y TODA la trayectoria profesional
-      await addSectionToPdf('perfil-section', false); // Perfil (nombre, descripción, contacto)
-      await addSectionToPdf('trayectoria', false);    // Trayectoria Profesional (toda)
-
-      // Añadir una nueva página para la siguiente sección grande
-      pdf.addPage();
-
-      // PAGE 2: Habilidades & Competencias e Integración Humano-IA en Proyectos Reales
-      await addSectionToPdf('habilidades', false); // Habilidades (incluye Integración Humano-IA)
-
-      // Añadir una nueva página para la siguiente sección grande
-      pdf.addPage();
-
-      // PAGE 3: Formación Académica & Idiomas, Referencias Profesionales, Actividades Complementarias
-      await addSectionToPdf('formacion', false);       // Formación Académica & Idiomas
-      await addSectionToPdf('referencias', false);    // Referencias Profesionales
-      await addSectionToPdf('actividades', false);    // Actividades Complementarias
-      
-      pdf.save('CV_Angel_Mateo_Torres_Barco.pdf'); // Guarda el PDF con el nombre especificado
-      console.log("PDF generado y descargado exitosamente.");
-
+      if (result.success) {
+        console.log("PDF generado exitosamente por Apps Script:", result.pdfUrl);
+        // Abre el PDF en una nueva pestaña para su descarga
+        window.open(result.pdfUrl, '_blank');
+      } else {
+        console.error("Error al generar el PDF en Apps Script:", result.message);
+        alert(`Error al generar el PDF: ${result.message}`);
+      }
     } catch (error) {
-      console.error("Error al generar el PDF:", error);
-      // Aquí podrías mostrar un mensaje de error amigable al usuario en un modal.
+      console.error("Error en la comunicación con Apps Script:", error);
+      alert(`Error de comunicación con el servicio de PDF: ${error.message}. Verifique la consola.`);
     }
   };
 
@@ -243,8 +229,7 @@ function App() {
         </Container>
       </Navbar>
 
-      {/* Contenido del CV (el componente que se imprimirá) */}
-      {/* El componente CvContent seguirá utilizando el ref para que html2canvas pueda acceder a su DOM. */}
+      {/* Contenido del CV (el componente que se imprimirá o del que se obtendrá el HTML) */}
       <CvContent ref={cvContentRef} />
     </>
   );
