@@ -19,12 +19,14 @@ const cvData = {
   },
   trayectoria: [
     {
-      titulo: "Fundador y Director Ejecutivo en Carpe Diem Engineers SAS",
-      periodo: "(2022 - 2024)",
+      titulo: "Coordinador de Soluciones Operativas (Fundador) en Carpe Diem Engineers SAS",
+      periodo: "(2022 – 2024)",
       responsabilidades: [
-        "Establecí la empresa desde cero, desarrollando modelos comerciales B2B que resultaron en un crecimiento sostenido de la cartera de clientes y un aumento significativo en los ingresos año tras año.",
-        "Lideré la concepción y ejecución de consultorías financieras y técnicas en estructuras metálicas, cerrando acuerdos de alto valor y consolidando la presencia de mercado.",
-        "Mi rol incluyó la dirección operativa y la conversión efectiva de oportunidades en proyectos tangibles.",
+        "Lideré la planificación, estructuración y ejecución de proyectos de metalmecánica y metalcarpintería aplicados a arquitectura e ingeniería civil, optimizando procesos de producción y montaje.",
+        "Gestioné directamente la interacción con clientes, desde la comprensión de sus necesidades hasta la presentación de propuestas personalizadas y cierre de acuerdos, combinando argumentación técnica con habilidades comerciales.",
+        "Desarrollé relaciones comerciales sostenibles, articulando soluciones que no solo resolvían problemas técnicos, sino que generaban confianza y valor percibido en el cliente.",
+        // CAMBIO SUGERIDO: Añadimos una responsabilidad que refuerza la visión empresarial
+        "Establecí y ejecuté estrategias de desarrollo de negocio y crecimiento de cartera, optimizando la propuesta de valor para asegurar la sostenibilidad y rentabilidad a largo plazo de la empresa."
       ],
     },
     {
@@ -36,11 +38,14 @@ const cvData = {
       ],
     },
     {
-      titulo: "Co-Fundador y Director Técnico en Angel & Angel Ingeniería SAS",
-      periodo: "(2017 - 2021)",
+      titulo: "Responsable Técnico de Proyectos (Co-Fundador) en Angel & Angel Ingeniería SAS",
+      periodo: "(2017 – 2021)",
       responsabilidades: [
-        "Ejecución de estudios topográficos mediante tecnologías de teledetección (drones).",
-        "Generación de informes geoambientales para toma de decisiones sobre exploración y explotación minera.",
+        "Desarrollé y supervisé estudios topográficos utilizando drones y tecnologías de teledetección, aplicados a la caracterización de áreas para proyectos de minería y medio ambiente.",
+        "Elaboré informes geoambientales con enfoque práctico y persuasivo, adaptando el lenguaje técnico a audiencias no especializadas, facilitando la toma de decisiones y la aprobación de propuestas.",
+        "Participé activamente en la vinculación de nuevos clientes, aportando en reuniones de presentación, levantamiento de requerimientos y diseño de soluciones que conectaban con las expectativas técnicas y humanas del cliente.",
+        // CAMBIO SUGERIDO: Añadimos una responsabilidad que refuerza la gestión operativa y de impacto
+        "Implementé y optimicé procesos operativos y técnicos para estandarizar la entrega de proyectos, resultando en una mejora en la eficiencia y la calidad del servicio al cliente."
       ],
     },
     {
