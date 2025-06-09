@@ -117,81 +117,16 @@ const customStyles = `
 `;
 
 function App() {
-  // Crea una referencia al componente CvContent para obtener su HTML.
+  // No necesitamos cvContentRef para la generación de PDF ahora, solo para la visualización de la SPA.
   const cvContentRef = useRef(null);
 
-  // **¡IMPORTANTE!** ESTE ES EL URL DE TU APLICACIÓN WEB DE APPS SCRIPT
-  const APPS_SCRIPT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby-vC2k9D6YwuMi7wzEE8TT2s-4jq24R7WiLmMgeERTu8us1FBkN3WmXtZ1_hELnEE/exec'; 
+  // El URL del PDF estático que estará en la carpeta public
+  const STATIC_PDF_URL = `${import.meta.env.BASE_URL}CV_Angel_Mateo_Torres_Barco.pdf`;
 
-  // Función para descargar el CV como PDF utilizando Google Apps Script
-  const handleDownloadPdf = async () => {
-    console.log("Botón 'Descargar CV PDF' clicado.");
-    console.log("Intentando obtener HTML de cvContentRef.current:", cvContentRef.current);
-
-    if (!cvContentRef.current) {
-      console.error("No se encontró la referencia al contenido del CV. Asegúrate de que el componente CvContent esté montado.");
-      alert("Error: El contenido del CV no está listo. Por favor, intente de nuevo."); // Usamos alert temporalmente para el usuario.
-      return;
-    }
-
-    // Clonar el elemento para asegurar que no modificamos el DOM original
-    const printableElement = cvContentRef.current.cloneNode(true);
-
-    // Opcional: Eliminar cualquier elemento que no quieras en el PDF (e.g., botones, navbars)
-    // En este caso, como solo capturamos el contenido, no el navbar, no es estrictamente necesario aquí.
-    // Pero si tuvieras otros elementos en cvContentRef que no quieres en el PDF, podrías eliminarlos del clone.
-
-    // Extraer el HTML de la sección de CV.
-    // Si tu CV incluye imágenes con rutas relativas,
-    // asegúrate de que el Apps Script pueda resolverlas o que las rutas sean absolutas.
-    // Para las imágenes en la carpeta public, la ruta será absoluta desde la raíz de tu GH Pages.
-    // Ej: `<img src="https://ingatorres.github.io/ingamt/CVPh.jpg"`
-    // Vamos a reemplazar src de la imagen de perfil para que sea una URL absoluta en el HTML enviado.
-    const imgSrc = `${window.location.origin}${import.meta.env.BASE_URL}CVPh.jpg`;
-    const tempDiv = document.createElement('div');
-    tempDiv.appendChild(printableElement);
-    let htmlContent = tempDiv.innerHTML;
-
-    // Reemplaza la ruta relativa de la imagen de perfil por una URL absoluta en el HTML
-    // Esto es crucial para que Google Docs pueda cargar la imagen desde internet.
-    htmlContent = htmlContent.replace(/src="(\/?CVPh\.jpg)"/, `src="${imgSrc}"`);
-    console.log("HTML a enviar (parcial):", htmlContent.substring(0, 500) + "..."); // Mostrar un fragmento del HTML
-
-    // ¡Ya no es necesario verificar el placeholder, ya lo he reemplazado!
-    // if (APPS_SCRIPT_WEB_APP_URL === 'TU_URL_DE_APPS_SCRIPT_AQUI') {
-    //     console.error("Error: Por favor, actualiza APPS_SCRIPT_WEB_APP_URL en App.jsx con el URL de tu Apps Script Web App.");
-    //     alert("Error de configuración: URL de Apps Script no definida.");
-    //     return;
-    // }
-
-    try {
-      // Envía el HTML a la aplicación web de Apps Script
-      const response = await fetch(APPS_SCRIPT_WEB_APP_URL, {
-        method: 'POST',
-        // Content-Type: application/x-www-form-urlencoded es común para Apps Script doPost
-        // También puedes usar 'application/json' si tu doPost espera JSON,
-        // pero para simplicity con parámetros, form-urlencoded es más directo.
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        // Codifica el HTML para enviarlo como un parámetro
-        body: `htmlContent=${encodeURIComponent(htmlContent)}`,
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        console.log("PDF generado exitosamente por Apps Script:", result.pdfUrl);
-        // Abre el PDF en una nueva pestaña para su descarga
-        window.open(result.pdfUrl, '_blank');
-      } else {
-        console.error("Error al generar el PDF en Apps Script:", result.message);
-        alert(`Error al generar el PDF: ${result.message}`);
-      }
-    } catch (error) {
-      console.error("Error en la comunicación con Apps Script:", error);
-      alert(`Error de comunicación con el servicio de PDF: ${error.message}. Verifique la consola.`);
-    }
+  // Función para abrir el PDF estático
+  const handleDownloadPdf = () => {
+    console.log("Botón 'Descargar CV PDF' clicado. Abriendo PDF estático.");
+    window.open(STATIC_PDF_URL, '_blank');
   };
 
   return (
@@ -207,7 +142,7 @@ function App() {
             variant="info"
             className="fw-bold d-flex align-items-center me-auto order-1 order-lg-0"
             style={{ backgroundColor: 'var(--bs-info)', borderColor: 'var(--bs-info)', color: 'var(--bs-primary)' }}
-            onClick={handleDownloadPdf} // Llamamos a la nueva función de descarga
+            onClick={handleDownloadPdf} // Ahora solo abre el PDF estático
           >
             <i className="bi bi-file-earmark-arrow-down me-2"></i> Descargar CV PDF
           </Button>
@@ -229,7 +164,7 @@ function App() {
         </Container>
       </Navbar>
 
-      {/* Contenido del CV (el componente que se imprimirá o del que se obtendrá el HTML) */}
+      {/* Contenido del CV (visible en la SPA) */}
       <CvContent ref={cvContentRef} />
     </>
   );
