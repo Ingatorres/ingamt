@@ -20,7 +20,7 @@ const cvData = {
   trayectoria: [
     {
       titulo: "Fundador y Director Ejecutivo en Carpe Diem Engineers SAS",
-      periodo: "(2022 - Actualidad)",
+      periodo: "(2022 - 2024)",
       responsabilidades: [
         "Establecí la empresa desde cero, desarrollando modelos comerciales B2B que resultaron en un crecimiento sostenido de la cartera de clientes y un aumento significativo en los ingresos año tras año.",
         "Lideré la concepción y ejecución de consultorías financieras y técnicas en estructuras metálicas, cerrando acuerdos de alto valor y consolidando la presencia de mercado.",
