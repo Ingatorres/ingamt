@@ -180,9 +180,9 @@ const cvData = {
       telefono: "316 747 1877",
     },
     {
-      nombre: "José Guillermo Orjuela Ardila",
-      cargoEmpresa: "Gerente de Escuela de Participación, IDPAC",
-      telefono: "312 683 8869",
+      nombre: "Dr. Orlando Rubio Rico",
+      cargoEmpresa: "Asesor Vicepresidencia, ICETEX",
+      telefono: "311 212 5159",
     },
     {
       nombre: "Ing. Carlos Ropero",
